@@ -1,7 +1,6 @@
 # endoPublication
 
-Genomics-Based Identification of Microorganisms in Human Ocular Body Fluid
-Instruction for building the curated database
+Metagenomic Approaches for Determining the Structure and Function of Complex Microbiomes
 
 ## Getting Started
 
