@@ -80,7 +80,7 @@ def writeOutput(file, seqToRemove):
             if header.split(" ")[0] not in seqToRemove:
                 lengthGenomeClean += len(sequence)
                 numContigsClean += 1
-                writeFasta.write(header + "\n")
+                writeFasta.write(">" + header + "\n")
                 writeFasta.write(sequence + "\n")
             else:
                 lengthContigsAmbi += len(sequence)
@@ -168,5 +168,5 @@ with pathOutput.joinpath("log", "overview.txt").open("w") as writeOverview:
 
             #No blast file -> write output like input
             else:
-                print("no blast")
+                print("no blast file")
                 writeOutput(file, seqToRemove)
