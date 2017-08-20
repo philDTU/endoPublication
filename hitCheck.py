@@ -27,29 +27,30 @@ pathOutput = pathlib.Path(args.o)
 
 pathOutput.joinpath("clean").mkdir(exist_ok=True)
 pathOutput.joinpath("shrunk").mkdir(exist_ok=True)
-pathOutput.joinpath("log").mkdir(exist_ok=True)
+#pathOutput.joinpath("log").mkdir(exist_ok=True)
 
 
 
 #Get genus Name
-def getDesiredRanks(taxid, searchedRank):
+def getDesiredRank(taxid, searchedRank):
     try:
         lineage = ncbi.get_lineage(taxid)
         name = ncbi.get_taxid_translator(lineage)
         lineage2ranks = ncbi.get_rank(name)
         ranks2lineage = dict((rank, taxid) for (taxid, rank) in lineage2ranks.items())
-        return name[ranks2lineage[searchedRank]]
+        return name[ranks2lineage[searchedRank]], True
     except:
-        return "Genus not found"
+        return str(level) + " not found", False
 
 
 def appendToHits(encountered, hits, element):
     if element in encountered:
         hits.append(encountered[element])
     else:
-        tmp = getDesiredRanks(element, level)
-        hits.append(tmp)
-        encountered[element] = tmp
+        tmp, foundHit = getDesiredRank(element, level)
+        if foundHit:
+            hits.append(tmp)
+            encountered[element] = tmp
     return encountered, hits
 
 def addAmbiSequence(levelHits, seqToRemove, writerShrunk, bestHit, lineSplit):
@@ -95,20 +96,21 @@ print("Running script in base folder " + str(pathFasta) + " with threshold " + s
         ambiThreshold) + ", taxonomic level " + level + " and minimal query coverage of " + str(queryCoverage))
 
 
-with pathOutput.joinpath("log", "overview.txt").open("w") as writeOverview:
+with pathOutput.joinpath("clean", "overview.txt").open("w") as writeOverview:
 
     directory = pathFasta.iterdir()
 
 
     encounteredTaxIDs = {}
     for file in directory:
-        print(file.name)
+
         seqToRemove = set()
         init = False
         queryLevel = ""
         subjectLevel = ""
         if file.is_file() and (file.match("*.fna") or file.match("*.fa") or file.match("*.fasta")):
-            print(pathBlast.joinpath(file.with_suffix(".blast").name))
+            print("found blast file: " + str(pathBlast.joinpath(file.with_suffix(".blast").name)))
+            print("cleaning: " + file.name)
             #Do we have a corresponding blast file?
             if pathBlast.joinpath(file.with_suffix(".blast").name).exists():
 
@@ -122,7 +124,7 @@ with pathOutput.joinpath("log", "overview.txt").open("w") as writeOverview:
                     for line in readBlast.readlines():
                         lineSplit = str.split(line, "\t")
                         if not init:
-                            queryLevel = getDesiredRanks((str.split(lineSplit[0], "|")[-1]), level)
+                            queryLevel = getDesiredRank((str.split(lineSplit[0], "|")[-1]), level)
                             bestHit = line
                             bestHitScore = lineSplit[3]
                             init = True
@@ -168,5 +170,5 @@ with pathOutput.joinpath("log", "overview.txt").open("w") as writeOverview:
 
             #No blast file -> write output like input
             else:
-                print("no blast file")
+                print("no blast file found")
                 writeOutput(file, seqToRemove)

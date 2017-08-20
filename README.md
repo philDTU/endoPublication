@@ -57,12 +57,11 @@ pip3 install ete3
   python3 hitCheck.py -l <taxaLevel> -b <pathToBlastFiles> -p <pathToSplitFastaFiles> -o <pathToWriteOutput> -t <threshold> -q <minQueryCoverage>
   ```
 
-  hitCheck generates 3 new folders
+  hitCheck generates 2 new folders
    - shrunk will contain the best hit of the blast results together with a taxonomic string
-   - log will contain a log file with information for each input file
    - clean will contain the cleaned genome files
 
-  log file content
+  overview.txt file content
    - filename: name of processed file
    - numContigsSplit: number of contigs after splitting
    - lengthGenomeSplit: number of bases after splitting

@@ -8,9 +8,9 @@ from Bio import SeqIO
 
 directory = pathlib.Path(sys.argv[1]).iterdir()
 
-pathOutput.joinpath("split").mkdir(exist_ok=True)
-pathOutput.joinpath("blast").mkdir(exist_ok=True)
-pathOutput.joinpath("blast/output").mkdir(exist_ok=True)
+pathlib.Path(sys.argv[1]).joinpath("split").mkdir(exist_ok=True)
+pathlib.Path(sys.argv[1]).joinpath("blast").mkdir(exist_ok=True)
+pathlib.Path(sys.argv[1]).joinpath("blast/output").mkdir(exist_ok=True)
 
 #Splits all genomes in a folder and writes them to a new fasta file
 for file in directory:
