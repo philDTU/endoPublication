@@ -40,17 +40,16 @@ def getDesiredRank(taxid, searchedRank):
         ranks2lineage = dict((rank, taxid) for (taxid, rank) in lineage2ranks.items())
         return name[ranks2lineage[searchedRank]], True
     except:
-        return str(level) + " not found", False
+        return str(level) + " not found"
 
 
 def appendToHits(encountered, hits, element):
     if element in encountered:
         hits.append(encountered[element])
     else:
-        tmp, foundHit = getDesiredRank(element, level)
-        if foundHit:
-            hits.append(tmp)
-            encountered[element] = tmp
+        tmp = getDesiredRank(element, level)
+        hits.append(tmp)
+        encountered[element] = tmp
     return encountered, hits
 
 def addAmbiSequence(levelHits, seqToRemove, writerShrunk, bestHit, lineSplit):
