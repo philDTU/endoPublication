@@ -82,6 +82,6 @@ pip3 install ete3
 
 ## Acknowledgments
 
-* Download scripts for genomes - Mike Watson - [mw55309](https://github.com/mw55309)
+* Download scripts for genomes - Mick Watson - [mw55309](https://github.com/mw55309)
 * Kraken - Derrick Wood - [DerrickWood](https://github.com/DerrickWood)
 * Bracken - Jennifer Lu - [jenniferlu717](https://github.com/jenniferlu717)
