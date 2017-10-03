@@ -136,7 +136,7 @@ with pathOutput.joinpath("clean", "overview.txt").open("w") as writeOverview:
 
                                 #Process data for last contig
                                 #Check if we have a hit at the querylevel
-                                if levelHits.__contains__(queryLevel):
+                                if queryLevel in levelHits:
 
                                     if (levelHits.count(queryLevel) / len(levelHits)) < ambiThreshold:
                                         levelHits, seqToRemove = addAmbiSequence(levelHits, seqToRemove, writerShrunk,
