@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 
 import argparse
 import pathlib
@@ -27,11 +26,8 @@ pathOutput = pathlib.Path(args.o)
 
 pathOutput.joinpath("clean").mkdir(exist_ok=True)
 pathOutput.joinpath("shrunk").mkdir(exist_ok=True)
-#pathOutput.joinpath("log").mkdir(exist_ok=True)
+pathOutput.joinpath("log").mkdir(exist_ok=True)
 
-
-
-#Get genus Name
 def getDesiredRank(taxid, searchedRank):
     try:
         lineage = ncbi.get_lineage(taxid)
@@ -40,16 +36,17 @@ def getDesiredRank(taxid, searchedRank):
         ranks2lineage = dict((rank, taxid) for (taxid, rank) in lineage2ranks.items())
         return name[ranks2lineage[searchedRank]], True
     except:
-        return str(level) + " not found"
+        return str(level) + " not found", False
 
 
 def appendToHits(encountered, hits, element):
     if element in encountered:
         hits.append(encountered[element])
     else:
-        tmp = getDesiredRank(element, level)
-        hits.append(tmp)
-        encountered[element] = tmp
+        queryLevel, found = getDesiredRank(element, level)
+        if found:
+            hits.append(queryLevel)
+            encountered[element] = queryLevel
     return encountered, hits
 
 def addAmbiSequence(levelHits, seqToRemove, writerShrunk, bestHit, lineSplit):
@@ -91,16 +88,15 @@ def writeOutput(file, seqToRemove):
                 lengthContigsAmbi) + "\n")
 
 
-print("Running script in base folder " + str(pathFasta) + " with threshold " + str(
-        ambiThreshold) + ", taxonomic level " + level + " and minimal query coverage of " + str(queryCoverage))
+with pathOutput.joinpath("log", "log.txt").open("w") as writeLog, pathOutput.joinpath("log", "overview.txt").open("w") as writeOverview:
 
-
-with pathOutput.joinpath("clean", "overview.txt").open("w") as writeOverview:
+    writeLog.write("Running script in base folder " + str(pathFasta) + " with threshold " + str(ambiThreshold) +
+                   ", taxonomic level " + level + " and minimal query coverage of " + str(queryCoverage) + "\n")
+    writeLog.flush()
 
     directory = pathFasta.iterdir()
-
-
     encounteredTaxIDs = {}
+
     for file in directory:
 
         seqToRemove = set()
@@ -108,11 +104,13 @@ with pathOutput.joinpath("clean", "overview.txt").open("w") as writeOverview:
         queryLevel = ""
         subjectLevel = ""
         if file.is_file() and (file.match("*.fna") or file.match("*.fa") or file.match("*.fasta")):
-            print("found blast file: " + str(pathBlast.joinpath(file.with_suffix(".blast").name)))
-            print("cleaning: " + file.name)
+
+            writeLog.write("cleaning: " + file.name + "\n")
+            writeLog.flush()
             #Do we have a corresponding blast file?
             if pathBlast.joinpath(file.with_suffix(".blast").name).exists():
-
+                writeLog.write("found blast file: " + str(pathBlast.joinpath(file.with_suffix(".blast").name)) + "\n")
+                writeLog.flush()
                 with pathBlast.joinpath(file.with_suffix(".blast").name).open("r") as readBlast, \
                         pathOutput.joinpath("shrunk", file.with_suffix(".blast").name).open("w") as writerShrunk:
 
@@ -120,13 +118,21 @@ with pathOutput.joinpath("clean", "overview.txt").open("w") as writeOverview:
                     levelHits = []
                     bestHit = ""
                     bestHitScore = 0
+                    noHitContig = ""
                     for line in readBlast.readlines():
                         lineSplit = str.split(line, "\t")
                         if not init:
-                            queryLevel = getDesiredRank((str.split(lineSplit[0], "|")[-1]), level)
-                            bestHit = line
-                            bestHitScore = lineSplit[3]
-                            init = True
+                            #print(str.split(str.split(lineSplit[0], "|")[-1],"_",1)[1])
+                            #print(lineSplit)
+                            queryLevel, found = getDesiredRank(str.split(lineSplit[0], "|")[-1], level)
+                            if found:
+                                bestHit = line
+                                bestHitScore = lineSplit[3]
+                                init = True
+                            elif lineSplit[0] != noHitContig:
+                                writeLog.write("No match for contig " + lineSplit[1] + "\n")
+                                writeLog.flush()
+                                noHitContig = lineSplit[0]
 
                         #We are only interested in blast hits with a coverage larger than the min querycoverage
                         if float(lineSplit[18]) >= queryCoverage:
@@ -137,12 +143,11 @@ with pathOutput.joinpath("clean", "overview.txt").open("w") as writeOverview:
                                 #Process data for last contig
                                 #Check if we have a hit at the querylevel
                                 if queryLevel in levelHits:
-
                                     if (levelHits.count(queryLevel) / len(levelHits)) < ambiThreshold:
                                         levelHits, seqToRemove = addAmbiSequence(levelHits, seqToRemove, writerShrunk,
                                                                                  bestHit, lineSplit)
 
-                                #ambi contig, because list is not empty and no hit a query level
+                                #ambi contig, because list is not empty and no hit on query level
                                 elif levelHits:
                                     levelHits, seqToRemove = addAmbiSequence(levelHits, seqToRemove, writerShrunk,
                                                                              bestHit, lineSplit)
@@ -169,5 +174,6 @@ with pathOutput.joinpath("clean", "overview.txt").open("w") as writeOverview:
 
             #No blast file -> write output like input
             else:
-                print("no blast file found")
+                writeLog.write("no blast file found" + "\n")
+                writeLog.flush()
                 writeOutput(file, seqToRemove)
