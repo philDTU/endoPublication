@@ -26,9 +26,12 @@ for file in directory:
                 for i in subsequence:
                     if len(i) >= 100:
                         count += 1
-                        writeSplit.write(">" + str(count) + "_" + header + "\n")
+                        writeSplit.write(
+                            ">" + str.split(header, " ",maxsplit=1)[0] + "|" + str(count) + " " + str.split(header, " ",maxsplit=1)[1] + "\n")
                         writeSplit.write(i + "\n")
                         #Write out candidates for blast
                         if len(i) < 10000:
-                            writeCandidates.write(">" + str(count) + "_" + header + "\n")
+                            writeCandidates.write(
+                                ">" + str.split(header, " ",maxsplit=1)[0] + "|" + str(count) + " " + str.split(header, " ", maxsplit=1)[
+                                    1] + "\n")
                             writeCandidates.write(i + "\n")
